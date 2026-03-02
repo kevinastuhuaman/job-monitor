@@ -8,8 +8,8 @@
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white" alt="AWS">
-  <img src="https://img.shields.io/badge/Puppeteer-40B5A4?style=for-the-badge&logo=puppeteer&logoColor=white" alt="Puppeteer">
+  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge" alt="AWS">
+  <img src="https://img.shields.io/badge/Puppeteer-40B5A4?style=for-the-badge" alt="Puppeteer">
 </p>
 
 A production job monitoring system that scrapes 775 companies across 22 applicant tracking systems (Greenhouse, Ashby, Lever, SmartRecruiters, Workday, and 17 others) on a 15-minute cron. Tracks ~94,000 job postings with real posting date extraction, deduplication, and classification.
