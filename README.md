@@ -1,4 +1,4 @@
-# job-monitor 🕷️ — Scrapes 775 companies across 22 ATS types, every 15 minutes.
+# job-monitor
 
 <p align="center">
   <img src="assets/hero.png" alt="job-monitor hero" width="1100">
@@ -12,17 +12,19 @@
   <img src="https://img.shields.io/badge/Puppeteer-40B5A4?style=for-the-badge" alt="Puppeteer">
 </p>
 
-A production job monitoring system that scrapes 775 companies across 22 applicant tracking systems (Greenhouse, Ashby, Lever, SmartRecruiters, Workday, and 17 others) on a 15-minute cron. Tracks ~94,000 job postings with real posting date extraction, deduplication, and classification.
+Trackly monitors direct company career pages so job seekers can see roles before they spread across job boards. The public Trackly site currently shows 1,900+ companies and 128,975+ roles, with coverage across 40+ ATS and custom career-page patterns.
 
 > **This is a closed-source project.** The README documents the architecture and learnings.
+>
+> Public proof: [usetrackly.app](https://usetrackly.app) and [Kevin's proof ledger](https://portfolio.kevinastuhuaman.com/proof/).
 
 ## What it does
 
-- Monitors 775 companies every 15 minutes via cron
-- Supports 22 ATS types with custom scrapers for each
+- Monitors direct company career pages on a scheduled polling loop
+- Covers 1,900+ companies and 40+ ATS/custom career-page patterns
 - Extracts real posting dates (not "just posted" approximations)
 - Classifies jobs by role, level, and location using LLM chain
-- Sends Slack alerts for new PM roles matching criteria
+- Sends alerts for new roles matching saved criteria
 - Anti-bot v2 with circuit breaker and feature-flag rollout
 
 ## How it works
@@ -33,7 +35,7 @@ Cron (*/15) ──► Worker ──► Company List ──► ATS Dispatcher
                     ┌───────────────────────────┘
                     ▼
               ATS Scraper          ┌─────────────────┐
-           (22 types supported)    │   Anti-Bot v2    │
+         (40+ patterns covered)    │   Anti-Bot v2    │
                     │              │  - Rotating IPs  │
                     │◄────────────►│  - Fingerprints  │
                     │              │  - Circuit Break  │
@@ -67,6 +69,6 @@ Anti-bot system uses rotating proxies, browser fingerprint randomization, and ci
 
 ## What I learned
 
-- **Anti-bot is an arms race** — circuit breakers with auto-rollback saved us from silent failures. Without them, scrapers would return zero jobs and we'd never know.
-- **Composite database indexes turned a 229-second query into 0.3ms** — always profile the database before optimizing application code.
-- **22 ATS types means 22 different HTML structures** — the scraper abstraction layer was the hardest part to get right. Each ATS has its own pagination, date format, and API quirks.
+- **Anti-bot is an arms race:** circuit breakers with auto-rollback saved us from silent failures. Without them, scrapers would return zero jobs and we'd never know.
+- **Composite database indexes turned a 229-second query into 0.3ms:** always profile the database before optimizing application code.
+- **Career pages do not behave like one product:** the scraper abstraction layer was the hardest part to get right. Each ATS has its own pagination, date format, and API quirks.
