@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "title": "Trackly Job Discovery Pipeline",
+  "author": "Kevin Astuhuaman",
+  "status": "Live product architecture case study",
+  "repository": "https://github.com/kevinastuhuaman/job-monitor",
+  "liveProduct": "https://usetrackly.app",
+  "portfolioProof": "https://portfolio.kevinastuhuaman.com/proof/",
+  "evidenceAsOf": "2026-07-12",
+  "publicEvidence": {
+    "monitoredCareerSites": 1969,
+    "atsAndSourceTypes": 40,
+    "jobRecords": 128975
+  },
+  "capabilities": [
+    "Multi-source career-site monitoring",
+    "Provenance-preserving normalization",
+    "Freshness and false-zero guards",
+    "Batch isolation and fleet watchdogs",
+    "LLM classification with regression evaluation",
+    "Hybrid job retrieval",
+    "Web, iOS, macOS, CLI, MCP, chat, and voice delivery"
+  ],
+  "production": {
+    "cutoverDate": "2026-06-30",
+    "primaryCloud": "Azure",
+    "database": "Azure PostgreSQL behind private networking",
+    "search": "Azure AI Search",
+    "observability": ["Application Insights", "Log Analytics"],
+    "legacyBoundary": "AWS Lightsail and RDS are rollback or reference infrastructure after cutover"
+  },
+  "publicBoundary": "No proprietary adapters, private endpoints, credentials, customer or applicant data, source-bypass techniques, cloud identifiers, or private production topology are included."
+}

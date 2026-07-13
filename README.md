@@ -1,74 +1,112 @@
-# job-monitor
+# Trackly Job Discovery Pipeline
 
-<p align="center">
-  <img src="assets/hero.png" alt="job-monitor hero" width="1100">
-</p>
+A public architecture case study for operating a multi-source job discovery system without confusing missing data with an empty market.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge" alt="AWS">
-  <img src="https://img.shields.io/badge/Puppeteer-40B5A4?style=for-the-badge" alt="Puppeteer">
-</p>
+**Public evidence, July 12, 2026:** 1,969 monitored company career sites, 40 ATS and source types, and 128,975 job records.
 
-Trackly monitors direct company career pages so job seekers can see roles before they spread across job boards. The public Trackly site currently shows 1,900+ companies and 128,975+ roles, with coverage across 40+ ATS and custom career-page patterns.
+[Open Trackly](https://usetrackly.app) | [Inspect the proof ledger](https://portfolio.kevinastuhuaman.com/proof/) | [See the AI product stack](https://kevinastuhuaman.github.io/ai-product-builder-stack/) | [Use the public CLI + MCP](https://github.com/trackly-app/trackly-cli)
 
-> **This is a closed-source project.** The README documents the architecture and learnings.
->
-> Public proof: [usetrackly.app](https://usetrackly.app) and [Kevin's proof ledger](https://portfolio.kevinastuhuaman.com/proof/).
+This repository documents the product architecture, operating controls, and infrastructure evolution. It does not publish proprietary source adapters, customer data, credentials, private topology, or bypass techniques.
 
-## What it does
+## The product problem
 
-- Monitors direct company career pages on a scheduled polling loop
-- Covers 1,900+ companies and 40+ ATS/custom career-page patterns
-- Extracts real posting dates (not "just posted" approximations)
-- Classifies jobs by role, level, and location using LLM chain
-- Sends alerts for new roles matching saved criteria
-- Anti-bot v2 with circuit breaker and feature-flag rollout
+Company career sites do not behave like one product. They expose different APIs, pagination rules, date semantics, identifiers, locations, and failure modes. A source that returns zero jobs might represent a real empty result, a changed ATS slug, a blocked request, a parser regression, a deactivated company, or a temporary upstream incident.
 
-## How it works
+The system therefore treats source reliability and evidence quality as product behavior, not background infrastructure.
 
-```
-Cron (*/15) ──► Worker ──► Company List ──► ATS Dispatcher
-                                                │
-                    ┌───────────────────────────┘
-                    ▼
-              ATS Scraper          ┌─────────────────┐
-         (40+ patterns covered)    │   Anti-Bot v2    │
-                    │              │  - Rotating IPs  │
-                    │◄────────────►│  - Fingerprints  │
-                    │              │  - Circuit Break  │
-                    ▼              └─────────────────┘
-              Normalize Data
-                    │
-                    ▼
-          Deduplicate (PostgreSQL)
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │   6-Tier LLM Chain   │
-        │ Azure ► Agent SDK    │
-        │ ► Bedrock ► Foundry  │
-        │ ► Vertex ► Anthropic │
-        └──────────────────────┘
-                    │
-                    ▼
-            Slack Alerts (#trackly-critical)
+## Reference pipeline
+
+```text
+Monitored company catalog
+        |
+        v
+Scheduled source workers
+        |
+        v
+ATS and career-site adapter layer
+        |
+        v
+Normalize identifiers, dates, locations, and descriptions
+        |
+        v
+Deduplicate and preserve source provenance in PostgreSQL
+        |
+        v
+Freshness, false-zero, and lifecycle guards
+        |
+        v
+LLM classification and search enrichment
+        |
+        v
+Matching, alerts, web, native apps, CLI, MCP, chat, and voice
 ```
 
-Anti-bot system uses rotating proxies, browser fingerprint randomization, and circuit breaker pattern (auto-rollback if zero-job rate exceeds threshold).
+## Reliability contracts
 
-## Tech stack
+| Failure mode | Product control |
+| --- | --- |
+| Source suddenly returns zero | Compare with known history; hold destructive lifecycle changes until the result is verified |
+| One adapter throws | Isolate the company failure so the rest of the polling batch completes |
+| Posting disappears temporarily | Separate source availability from job lifecycle state |
+| ATS identifier changes | Detect stale or invalid source configuration and route it for rediscovery |
+| Description is missing | Treat incomplete content as a data-quality failure before classification |
+| Model or prompt changes | Run golden-set and regression evals before promotion |
+| Fleet coverage drifts | Watch stale pollers, never-polled sources, error spikes, and dropped-company accounting |
 
-- **Runtime:** Node.js on AWS Lightsail (xlarge)
-- **Database:** PostgreSQL (RDS), composite indexes for sub-millisecond queries
-- **AI:** 6-tier LLM chain (Azure > Agent SDK > Bedrock > Foundry > Vertex > Anthropic)
-- **Infra:** GitHub Actions CI/CD, PM2 process manager, Healthchecks.io
-- **Monitoring:** Slack (#trackly-critical, #trackly-info), Uptime Kuma
+The core operating principle is fail loud, preserve known-good data, and retry the smallest uncertain boundary.
 
-## What I learned
+## Current production architecture
 
-- **Anti-bot is an arms race:** circuit breakers with auto-rollback saved us from silent failures. Without them, scrapers would return zero jobs and we'd never know.
-- **Composite database indexes turned a 229-second query into 0.3ms:** always profile the database before optimizing application code.
-- **Career pages do not behave like one product:** the scraper abstraction layer was the hardest part to get right. Each ATS has its own pagination, date format, and API quirks.
+Trackly production moved from AWS to Azure on June 30, 2026.
+
+| Layer | Current role |
+| --- | --- |
+| Azure App Service | Production API, source workers, and scoring services |
+| Azure PostgreSQL | Blue production database behind private networking |
+| Azure AI Search | Hybrid retrieval for job search and product experiences |
+| Azure OpenAI and model fallbacks | Classification, enrichment, and user-facing AI workflows |
+| Application Insights and Log Analytics | Runtime observability and incident evidence |
+| GitHub Actions | Tested deployments and operational verification |
+| Terraform | Audit-first inventory and read-only drift detection |
+
+Legacy AWS Lightsail and RDS resources are rollback or reference infrastructure after the cutover, not the live production source of truth. Langfuse and a small number of separate dependencies remain migration-specific exceptions rather than evidence that the primary product still runs on AWS.
+
+## Infrastructure evolution
+
+| Earlier system | Current system | Product reason |
+| --- | --- | --- |
+| AWS Lightsail API and workers | Azure App Service workloads | Standardize deployment and post-cutover operations |
+| AWS RDS PostgreSQL | Azure blue PostgreSQL | Keep the live database close to the Azure application path |
+| Ad hoc infrastructure knowledge | Audit-first Terraform and deferred-resource checks | Make ownership, drift, and rollback boundaries inspectable |
+| Basic uptime checks | Fleet watchdogs plus Application Insights evidence | Detect silent data-quality regressions, not only server downtime |
+
+The migration was not presented as a clean-room rewrite. Rollback resources, staging, public hostnames, search, runners, and observability moved through explicit readiness and verification gates.
+
+## Product decisions
+
+### Provenance survives normalization
+
+Every normalized job retains enough source context to explain where it came from and whether the evidence is current. Search quality is not useful if a user cannot trust the underlying posting.
+
+### Empty is an outcome, not an assumption
+
+The product distinguishes a verified empty source from a failed read. That prevents a transient upstream problem from silently deleting inventory or hiding a company from users.
+
+### Models do not own lifecycle truth
+
+LLMs classify and enrich records; they do not decide whether a job exists. Source identity, polling evidence, and deterministic lifecycle guards remain separate from model output.
+
+### Operations are part of product quality
+
+Fleet coverage, stale sources, false-zero rates, and dropped work affect the user promise directly. They belong in release criteria and product review, not only an engineering dashboard.
+
+## What this demonstrates
+
+- Product judgment for reliability, uncertainty, and evidence provenance.
+- Technical fluency across source adapters, PostgreSQL, hybrid search, LLM evals, cloud migration, CI/CD, and observability.
+- Experience operating one product across web, iOS, macOS, CLI, MCP, chat, and voice surfaces.
+- The ability to translate infrastructure work into user-visible quality and clear product controls.
+
+## Public boundary
+
+This is a public-safe architecture artifact. It contains no proprietary adapters, private endpoints, credentials, customer or applicant data, source-bypass techniques, cloud identifiers, or production topology details. See [`IP-NOTICE.md`](IP-NOTICE.md), [`llms.txt`](llms.txt), and [`project.json`](project.json).
