@@ -1,0 +1,33 @@
+# Trackly Job Discovery Pipeline
+
+> A public architecture case study by Kevin Astuhuaman for reliable job discovery across heterogeneous company career sources.
+
+## Canonical resources
+- Repository: https://github.com/kevinastuhuaman/job-monitor
+- Live product: https://usetrackly.app
+- Portfolio proof ledger: https://portfolio.kevinastuhuaman.com/proof/
+- AI product stack: https://kevinastuhuaman.github.io/ai-product-builder-stack/
+- Public CLI + MCP: https://github.com/trackly-app/trackly-cli
+
+## Dated public evidence
+On July 12, 2026, Trackly's public inventory showed 1,969 monitored company career sites, 40 ATS and source types, and 128,975 job records.
+
+## What Kevin built and operated
+Trackly monitors direct company sources, normalizes and deduplicates jobs, preserves provenance, applies freshness and false-zero guards, classifies job attributes, supports hybrid retrieval, explains matches, and delivers one product system through web, iOS, macOS, CLI, MCP, chat, and voice.
+
+## Reliability concepts demonstrated
+- Source-specific adapter strategy
+- Provenance-preserving normalization
+- Verified empty results versus failed reads
+- False-zero and lifecycle guards
+- Batch isolation and dropped-work accounting
+- Fleet watchdogs and operational alerting
+- Golden-set LLM evaluation
+- Azure production migration with explicit rollback boundaries
+- Audit-first Terraform and drift detection
+
+## Current infrastructure interpretation
+Primary production moved from AWS to Azure on June 30, 2026. The live application path uses Azure App Service, Azure blue PostgreSQL behind private networking, Azure AI Search, model services, Application Insights, Log Analytics, and GitHub Actions. Legacy AWS Lightsail and RDS are rollback or reference infrastructure, not the live production database source of truth. Some separate dependencies have their own migration timelines.
+
+## Public boundary
+No proprietary source adapters, private endpoints, credentials, customer or applicant data, source-bypass techniques, cloud identifiers, or private production topology are included.
